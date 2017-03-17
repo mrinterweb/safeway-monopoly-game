@@ -1,6 +1,5 @@
 #! /usr/bin/env ruby
 
-require 'optparse'
 require 'sqlite3'
 require 'sequel'
 
@@ -9,7 +8,7 @@ DB = Sequel.connect('sqlite://safeway.db')
 class Code < Sequel::Model
   def validate
     super
-    errors.add(:code, "Invalid format") if (code =~ /^(8|9)[a-z][0-9]{2}[a-h]$/) != 0
+    errors.add(:code, "Invalid format") unless code =~ /^(8|9)[a-z][0-9]{2}[a-h]$/
   end
 
   def before_create
@@ -25,13 +24,13 @@ class Safeway
   attr_reader :db
 
   def initialize
-    # @db = SQLite3::Database.new "safeway.db"
     @db = DB
     create_codes_table
   end
 
   def run
     puts "Ctrl+c to exit"
+    puts "Type ? to show other options"
     loop do
       prompt
     end
@@ -44,7 +43,9 @@ class Safeway
     puts "Enter your code:"
     code = gets.chomp
     return if code.empty?
-    if code == 'show'
+    if code == '?'
+      puts "Available options: show, deleteall"
+    elsif code == 'show'
       codes = Code.order(:code).all
       groups = codes.group_by { |c| c.pk.slice(0, 2) }
       groups.each do |char, group|
@@ -73,17 +74,6 @@ class Safeway
     false
   end
 
-  # def exists?(code)
-  #   Code.where(pk: code).count >= 1
-  # end
-
-  # def create_db
-  #   db.execute <<~SQL
-  #     CREATE TABLE IF NOT EXISTS codes
-  #     pk varchar(2),
-  #     code varchar(10)
-  #   SQL
-  # end
   def create_codes_table
     db.create_table? :codes do
       String :pk, primary_key: true
