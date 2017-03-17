@@ -7,8 +7,10 @@ require 'sequel'
 DB = Sequel.connect('sqlite://safeway.db')
 
 class Code < Sequel::Model
-  # set_primary_key :pk
-
+  def validate
+    super
+    errors.add(:code, "Invalid format") if (code =~ /^(8|9)[a-z][0-9]{2}[a-h]$/) != 0
+  end
 
   def before_create
     super
@@ -63,6 +65,9 @@ class Safeway
   def insert(code)
     Code.create(code: code)
     true
+  rescue Sequel::ValidationFailed => e
+    puts e
+    false
   rescue Sequel::UniqueConstraintViolation
     puts "Duplicate code: #{code}"
     false
