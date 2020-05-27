@@ -2,13 +2,14 @@
 
 require 'sqlite3'
 require 'sequel'
+require 'pry'
 
 DB = Sequel.connect('sqlite://safeway.db')
 
 class Code < Sequel::Model
   def validate
     super
-    errors.add(:code, "Invalid format") unless code =~ /^(8|9)[a-z][0-9]{2}[a-h]$/
+    errors.add(:code, "Invalid format") unless code =~ /^[a-z]6[0-9]{2}[a-h]$/i
   end
 
   def before_create
@@ -55,7 +56,7 @@ class Safeway
         end
       end
     elsif code == 'deleteall'
-      Code.where.delete
+      Code.truncate
     else
       puts "Code recorded" if insert(code)
     end
